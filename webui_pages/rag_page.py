@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_extras.bottom_container import bottom
+# from streamlit_extras.bottom_container import bottom
 
 from webui_pages.utils import model_settings_init, model_settings_dialog, get_chatllm
 from rag.graphs.base_rag import create_rag_graph
@@ -34,7 +34,7 @@ def rag_page():
             {"role": "assistant", "content": RAG_PAGE_INTRODUCTION}]
     display_chat_history()
 
-    with bottom():
+    with st.bottom:
         cols = st.columns([1, 10, 1])
         if cols[0].button(":gear:", help="模型配置"):
             model_settings_dialog()

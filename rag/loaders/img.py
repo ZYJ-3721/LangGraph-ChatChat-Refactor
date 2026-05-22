@@ -10,7 +10,7 @@ from unstructured.partition.text import partition_text
 from langchain_community.document_loaders import UnstructuredFileLoader
 
 LLM_CAPTION_MODEL = "glm-4v-flash"
-LLM_CAPTION_API_KEY = "e7429a21a08a41b089a55dda1facfdb5.pYU0jXzarUrKNhBr"
+LLM_CAPTION_API_KEY = "63212be0933f4ce1ab0e1c02fd180002.TWATZQ8kjcslTEvS"
 LLM_CAPTION_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
 BLIP_CAPTION_MODEL = "Salesforce/blip-image-captioning-large"
 
