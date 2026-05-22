@@ -5,10 +5,11 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 
 PLATFORMS_API_URL = {
+    "GPUStack": "http://192.168.12.242:8780/v1",
     "Xinference": "http://192.168.12.19:9997/v1",
     "Ollama": "http://127.0.0.1:11434/v1",
     "OpenAI": "https://api.openai.com/v1",
-    "ZhipuAI": "https://open.bigmodel.cn/api/paas/v4", # 99b83f53f2c84fcd885939e3742b3cd2.zgywhYo4dLTwxViS
+    "ZhipuAI": "https://open.bigmodel.cn/api/paas/v4",
 }
 PLATFORMS = list(PLATFORMS_API_URL.keys())
 
@@ -71,7 +72,7 @@ def get_llm_models(platform: str, api_url: str=None, api_key: str=None):
         except Exception as e:
             st.error(e)
             return []
-    elif platform == "OpenAI":
+    else:
         return []
 
 def get_chatllm(
@@ -101,7 +102,7 @@ def get_embedding_models(platform: str, api_url: str=None, api_key: str=None):
         except Exception as e:
             st.error(e)
             return []
-    elif platform == "OpenAI":
+    else:
         return []
 
 def get_embedding(
