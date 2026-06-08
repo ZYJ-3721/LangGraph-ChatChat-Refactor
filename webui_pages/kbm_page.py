@@ -94,7 +94,7 @@ def kbm_page():
                 embedding_model = cols1[1].selectbox("选择模型", options=get_embedding_models(platform, api_url, api_key))
             else:
                 embedding_model = cols1[1].text_input("选择模型", placeholder="（必填）")
-            if st.button("确认创建", use_container_width=True):
+            if st.button("确认创建", width="stretch"):
                 if not kb_name.strip():
                     st.error(f"知识库名称不能为空！")
                 elif kb_name in kb_name_list:
@@ -136,7 +136,7 @@ def kbm_page():
                 embedding_model = cols1[1].selectbox("选择模型", options=kb["embedding_model"], disabled=True)
             else:
                 embedding_model = cols1[1].text_input("选择模型", value=kb["embedding_model"], disabled=True)
-            if st.button("确认修改", use_container_width=True):
+            if st.button("确认修改", width="stretch"):
                 if kb_desc == kb["kb_desc"] and platform == kb["platform"] \
                     and api_url == kb["api_url"] and api_key == kb["api_key"]:
                     st.toast("⚠️没有检测到任何修改！")
@@ -165,7 +165,7 @@ def kbm_page():
         files = st.file_uploader("请上传知识文件", accept_multiple_files=True, type=FILE_TYPES_LOADERS.keys())
 
         cols = st.columns(3) # 知识库管理的三个按钮
-        if cols[2].button("删除知识库", use_container_width=True):
+        if cols[2].button("删除知识库", width="stretch"):
             try: # 从数据库表中删除选择的知识库信息
                 delete_kb_from_db(kb_name)
             except Exception as e:
@@ -177,10 +177,10 @@ def kbm_page():
             st.session_state["selected_kb_name"] = "新建知识库"
             st.rerun()
         
-        if cols[1].button("x x x x x", use_container_width=True):
+        if cols[1].button("x x x x x", width="stretch"):
             pass
         
-        if cols[0].button("添加到知识库", use_container_width=True, disabled=(len(files)==0)):
+        if cols[0].button("添加到知识库", width="stretch", disabled=(len(files)==0)):
             with st.spinner("正在添加到知识库...", show_time=True):
                 saved_files = multi_thread_run(
                     save_file, desc="\033[32mFile Saving",
@@ -242,13 +242,13 @@ def kbm_page():
                 selected_rows = files_aggrid.selected_rows
             
             cols = st.columns(3) # 知识库管理的三个按钮
-            if cols[2].button("x x x x x 1", use_container_width=True):
+            if cols[2].button("x x x x x 1", width="stretch"):
                 pass
 
-            if cols[1].button("x x x x x 2", use_container_width=True):
+            if cols[1].button("x x x x x 2", width="stretch"):
                 pass
             
-            if cols[0].button("x x x x x 3", use_container_width=True):
+            if cols[0].button("x x x x x 3", width="stretch"):
                 pass
             
         
@@ -273,13 +273,13 @@ def kbm_page():
                 chunks_aggrid = AgGrid(df_chunks, gridOptions=chunks_gridOptions, height=500, theme="alpine")
 
                 cols = st.columns(3) # 知识库管理的三个按钮
-                if cols[2].button("x x x x x 4", use_container_width=True):
+                if cols[2].button("x x x x x 4", width="stretch"):
                     pass
 
-                if cols[1].button("x x x x x 5", use_container_width=True):
+                if cols[1].button("x x x x x 5", width="stretch"):
                     pass
                 
-                if cols[0].button("x x x x x 6", use_container_width=True):
+                if cols[0].button("x x x x x 6", width="stretch"):
                     pass
         
         st.divider() # 水平分割线

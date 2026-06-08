@@ -1,7 +1,7 @@
 import streamlit as st
 # from streamlit_extras.bottom_container import bottom
 
-from .utils import model_settings_init, model_settings_dialog, get_chatllm
+from .utils import init_model_settings, model_settings_dialog, get_chatllm
 
 
 AGENT_PAGE_INTRODUCTION = "你好，我是你的AI小助手`（Agent对话模式）`，我可以基于你左侧选择的工具回答问题，请问有什么可以帮助您？"
@@ -24,7 +24,7 @@ def clear_chat_history():
         {"role": "assistant", "content": AGENT_PAGE_INTRODUCTION}]
 
 def agent_page():
-    model_settings_init()
+    init_model_settings()
     if "agent_chat_history" not in st.session_state:
         st.session_state["agent_chat_history"] = [
             {"role": "assistant", "content": AGENT_PAGE_INTRODUCTION}]

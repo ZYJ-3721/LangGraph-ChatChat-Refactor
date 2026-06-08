@@ -13,17 +13,18 @@ PLATFORMS_API_URL = {
 }
 PLATFORMS = list(PLATFORMS_API_URL.keys())
 
-def model_settings_init():
+def init_model_settings():
     if "platform" not in st.session_state:
         st.session_state["platform"] = PLATFORMS[0]
         st.session_state["api_url"] = ""
         st.session_state["api_key"] = ""
         st.session_state["model"] = next(iter(get_llm_models(st.session_state["platform"])), "")
-        st.session_state["max_tokens"] = 1024
-        st.session_state["history_len"] = 25
+        st.session_state["thinking"] = 0
+        st.session_state["max_tokens"] = 65536
+        st.session_state["history_len"] = 50
         st.session_state["temperature"] = .7
 
-@st.dialog("模型配置", width="large")
+@st.dialog("模型配置", width="medium")
 def model_settings_dialog():
     cols1 = st.columns(2) # 第一行两列
     cols2 = st.columns(2) # 第二行两列
@@ -37,14 +38,16 @@ def model_settings_dialog():
         model = cols1[1].selectbox("选择模型", options=get_llm_models(platform, api_url, api_key))
     else:
         model = cols1[1].text_input("选择模型", st.session_state.model, placeholder="（必填）")
-    max_tokens = st.slider("Max Tokens", 0, 4096, st.session_state.max_tokens)
-    history_len = st.slider("History Len", 1, 50, st.session_state.history_len)
+    thinking = st.slider("Thinking", 0, 262144, st.session_state.thinking)
+    max_tokens = st.slider("Max Tokens", 0, 262144, st.session_state.max_tokens)
+    history_len = st.slider("History Len", 1, 100, st.session_state.history_len)
     temperature = st.slider("Temperature", 0., 1., st.session_state.temperature)
-    if st.button("确认", use_container_width=True):
+    if st.button("确认", width="stretch"):
         st.session_state.platform = platform
         st.session_state.api_url = api_url
         st.session_state.api_key = api_key
         st.session_state.model = model
+        st.session_state.thinking = thinking
         st.session_state.max_tokens = max_tokens
         st.session_state.history_len = history_len
         st.session_state.temperature = temperature
@@ -59,7 +62,7 @@ def get_llm_models(platform: str, api_url: str=None, api_key: str=None):
     if platform == "Xinference":
         try:
             from xinference_client import RESTfulClient as Client
-            client = Client(get_base_url(api_url or PLATFORMS_API_URL[platform]))
+            client = Client(get_base_url(api_url or PLATFORMS_API_URL[platform]), api_key)
             return [k for k, v in client.list_models().items() if "LLM" in v.get("model_type")]
         except Exception as e:
             st.error(e)
@@ -78,18 +81,25 @@ def get_llm_models(platform: str, api_url: str=None, api_key: str=None):
 def get_chatllm(
         platform: str, model: str, 
         api_url: str=None, api_key: str=None,
-        max_tokens: int=None, temperature: float=None):
+        thinking: int=0, max_tokens: int=0, temperature: float=0):
     api_url = api_url or PLATFORMS_API_URL[platform]
     api_key = api_key or "EMPTY"
     return ChatOpenAI(
         model=model, base_url=api_url, api_key=api_key,
-        max_tokens=max_tokens, temperature=temperature, streaming=True)
+        max_tokens=max_tokens, temperature=temperature,
+        output_version="v0" if thinking==0 else "responses/v1",
+        extra_body={
+            "chat_template_kwargs": {"enable_thinking": thinking > 0},
+            "thinking_token_budget": thinking
+        },
+        streaming=True, stream_usage=True
+    )
 
 def get_embedding_models(platform: str, api_url: str=None, api_key: str=None):
     if platform == "Xinference":
         try:
             from xinference_client import RESTfulClient as Client
-            client = Client(get_base_url(api_url or PLATFORMS_API_URL[platform]))
+            client = Client(get_base_url(api_url or PLATFORMS_API_URL[platform]), api_key)
             return [k for k, v in client.list_models().items() if "embedding" in v.get("model_type")]
         except Exception as e:
             st.error(e)
