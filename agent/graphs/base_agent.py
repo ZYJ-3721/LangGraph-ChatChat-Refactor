@@ -2,10 +2,10 @@ from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_openai import ChatOpenAI
-from agent.tools import *
+from agent.tools import AGETN_TOOLS
 
 def create_base_agent_graph(llm: ChatOpenAI, tool_names: list[str]):
-    tool_list = [duckduckgo_search, get_nowtime, get_weather]
+    tool_list = [AGETN_TOOLS[name] for name in tool_names]
     tool_node = ToolNode(tools=tool_list)
 
     def call_llm(state: MessagesState):

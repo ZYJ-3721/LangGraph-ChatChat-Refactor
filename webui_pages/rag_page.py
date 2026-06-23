@@ -25,18 +25,25 @@ def get_rag_response(platform, model, api_url, api_key, thinking, max_tokens, te
                 tool_name_list_str = " ".join([f"`{tool_call['name']}`" for tool_call in tool_calls])
                 batch_status = main_status.status(f"正在调用 {tool_name_list_str} ...", expanded=True)
                 for tool_call in tool_calls:
-                    tools_status[tool_call["id"]] = batch_status.status(f"正在执行 `{tool_call['name']}` ...", expanded=True)
-                    tools_status[tool_call["id"]].write(f"工具输入：`{tool_call['args']}`")
+                    tools_status[tool_call["id"]] = {
+                        "name": tool_call["name"],
+                        "status": batch_status.status(f"正在执行 `{tool_call['name']}` ...", expanded=True)
+                    }
+                    tools_status[tool_call["id"]]["status"].write(f"工具输入：`{tool_call['args']}`")
             if (node_data := event[1].get("tools")):
                 batch_status.update(label=f"{tool_name_list_str} 已完成", expanded=False, state="complete")
         
         if event[0] == "tools":
             if event[1]["event"] == "tool-finished":
-                tools_status[event[1]["tool_call_id"]].write(f"工具输出：{event[1]['output'].content}")
-                tools_status[event[1]["tool_call_id"]].update(label=f"`{event[1]['output'].name}` 已完成", expanded=False, state="complete")
+                tools_status[event[1]["tool_call_id"]]["status"].write(f"工具输出：{event[1]['output'].content}")
+                tools_status[event[1]["tool_call_id"]]["status"].update(
+                    label=f"`{event[1]['output'].name}` 已完成", expanded=False, state="complete")
             if event[1]["event"] == "tool-error":
-                tools_status[event[1]["tool_call_id"]].error(f"错误消息：{event[1]['message']}")
-                tools_status[event[1]["tool_call_id"]].update(label=f"`{event[1]['output'].name}` 执行失败", expanded=False, state="error")
+                tools_status[event[1]["tool_call_id"]]["status"].error(f"错误消息：{event[1]['message']}")
+                tools_status[event[1]["tool_call_id"]]["status"].update(
+                    label=f"`{tools_status[event[1]['tool_call_id']]['name']}` 执行失败", expanded=True, state="error")
+                batch_status.update(label=f"`{tool_name_list_str}` 调用失败", expanded=True, state="error")
+                main_status.update(label="RAG 检索失败", expanded=True, state="error")
         
         if event[0] == "messages":
             if type(event[1][0]) == AIMessageChunk:
@@ -86,7 +93,7 @@ def rag_page():
     display_chat_history()
 
     with st.bottom:
-        cols = st.columns([1, 10, 1], vertical_alignment="center")
+        cols = st.columns([1, 11, 1], vertical_alignment="center")
         if cols[0].button(":gear:", help="模型配置"):
             model_settings_dialog()
         if cols[2].button(":wastebasket:", help="清空对话"):

@@ -21,8 +21,6 @@ def multiply(a: int, b: int) -> int:
         a: 乘数
         b: 乘数
     """
-    import time
-    time.sleep(20)
     return a * b
 @tool
 def add(a: int, b: int) -> int:
