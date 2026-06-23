@@ -38,7 +38,7 @@ def model_settings_dialog():
         model = cols1[1].selectbox("选择模型", options=get_llm_models(platform, api_url, api_key))
     else:
         model = cols1[1].text_input("选择模型", st.session_state.model, placeholder="（必填）")
-    thinking = st.slider("Thinking", 0, 262144, st.session_state.thinking)
+    thinking = st.slider("Thinking", 0, 8192, st.session_state.thinking)
     max_tokens = st.slider("Max Tokens", 0, 262144, st.session_state.max_tokens)
     history_len = st.slider("History Len", 1, 100, st.session_state.history_len)
     temperature = st.slider("Temperature", 0., 1., st.session_state.temperature)
@@ -81,18 +81,22 @@ def get_llm_models(platform: str, api_url: str=None, api_key: str=None):
 def get_chatllm(
         platform: str, model: str, 
         api_url: str=None, api_key: str=None,
-        thinking: int=0, max_tokens: int=0, temperature: float=0):
+        thinking: int=0, max_tokens: int=0, temperature: float=.7):
     api_url = api_url or PLATFORMS_API_URL[platform]
     api_key = api_key or "EMPTY"
-    return ChatOpenAI(
+    extra_body={
+        "chat_template_kwargs": {"enable_thinking": thinking > 0},
+        "thinking_token_budget": thinking,
+        "reasoning_budget": thinking,
+        "thinking": {
+            "type": "enabled" if thinking else "disabled",
+            "budget_tokens": thinking
+        }
+    }
+    return ChatOpenAIWithReasoning(
         model=model, base_url=api_url, api_key=api_key,
         max_tokens=max_tokens, temperature=temperature,
-        output_version="v0" if thinking==0 else "responses/v1",
-        extra_body={
-            "chat_template_kwargs": {"enable_thinking": thinking > 0},
-            "thinking_token_budget": thinking
-        },
-        streaming=True, stream_usage=True
+        extra_body=extra_body, streaming=True, stream_usage=True
     )
 
 def get_embedding_models(platform: str, api_url: str=None, api_key: str=None):
@@ -121,4 +125,53 @@ def get_embedding(
     api_url = api_url or PLATFORMS_API_URL[platform]
     api_key = api_key or "EMPTY"
     return OpenAIEmbeddings(model=model, base_url=api_url, api_key=api_key)
+
+
+
+import openai
+from langchain_openai import ChatOpenAI
+from langchain_core.outputs import ChatResult, ChatGenerationChunk
+
+class ChatOpenAIWithReasoning(ChatOpenAI):
+    """支持 reasoning_content 的 ChatOpenAI"""
+
+    def _create_chat_result(
+        self,
+        response: dict | openai.BaseModel,
+        generation_info: dict | None = None,
+    ) -> ChatResult:
+        """提取结果中的 reasoning_content 到 additional_kwargs"""
+        chat_result = super()._create_chat_result(
+            response, generation_info
+        )
+        if (isinstance(response, openai.BaseModel)
+            and (choices := getattr(response, "choices", None))):
+            reasoning_content = (
+                getattr(choices[0].message, "reasoning", None) or
+                getattr(choices[0].message, "reasoning_content", None)
+            )
+            if reasoning_content is not None:
+                chat_result.generations[0].message.additional_kwargs["reasoning_content"] = reasoning_content
+        return chat_result
+    
+    def _convert_chunk_to_generation_chunk(
+        self,
+        chunk: dict,
+        default_chunk_class: type,
+        base_generation_info: dict | None,
+    ) -> ChatGenerationChunk | None:
+        """提取流式响应中的 reasoning_content 到 additional_kwargs"""
+        generation_chunk = super()._convert_chunk_to_generation_chunk(
+            chunk, default_chunk_class, base_generation_info
+        )
+        if (generation_chunk
+            and (choices := chunk.get("choices", [])) 
+            and (delta := choices[0].get("delta", {}))):
+            reasoning_content = (
+                delta.get("reasoning") or
+                delta.get("reasoning_content")
+            )
+            if reasoning_content is not None:
+                generation_chunk.message.additional_kwargs["reasoning_content"] = reasoning_content
+        return generation_chunk
 
