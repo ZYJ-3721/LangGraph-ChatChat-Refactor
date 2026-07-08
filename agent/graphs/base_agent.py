@@ -4,6 +4,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langchain_openai import ChatOpenAI
 from agent.tools import AGETN_TOOLS
 
+
 def create_base_agent_graph(llm: ChatOpenAI, tool_names: list[str]):
     tool_list = [AGETN_TOOLS[name] for name in tool_names]
     tool_node = ToolNode(tools=tool_list)
@@ -13,11 +14,11 @@ def create_base_agent_graph(llm: ChatOpenAI, tool_names: list[str]):
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
     
     graph = StateGraph(MessagesState)
-    graph.add_node("call_llm", call_llm)
+    graph.add_node("model", call_llm)
     graph.add_node("tools", tool_node)
 
-    graph.add_edge(START, "call_llm")
-    graph.add_conditional_edges("call_llm", tools_condition)
-    graph.add_edge("tools", "call_llm")
+    graph.add_edge(START, "model")
+    graph.add_conditional_edges("model", tools_condition)
+    graph.add_edge("tools", "model")
     # checkpointer可以换成数据库保存实现持久化记忆
     return graph.compile(checkpointer=InMemorySaver())

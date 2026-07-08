@@ -29,7 +29,7 @@ if __name__ == "__main__":
                 sac.MenuItem(label="知 识 库 管 理", icon="database-add"),
             ]
         )
-        sac.divider() # 水平分割线
+        st.divider() # 水平分割线
     
     if selected_page == "RAG 对 话":
         rag_page()

@@ -19,12 +19,13 @@ def get_agent_response(platform, model, api_url, api_key, thinking, max_tokens, 
         config={"configurable": {"thread_id": 21}},
         stream_mode=["updates", "tools", "messages"],
     ):
-        # st.write(event)
+        st.write(event)
         if event[0] == "updates":
-            if (node_data := event[1].get("call_llm")) and (tool_calls := node_data["messages"][0].tool_calls):
+            if (node_data := event[1].get("model")) and (tool_calls := node_data["messages"][0].tool_calls):
                 tool_name_list_str = " ".join([f"`{tool_call['name']}`" for tool_call in tool_calls])
                 batch_status = main_status.status(f"正在调用 {tool_name_list_str} ...", expanded=True)
                 for tool_call in tool_calls:
+                    st.write(f'1 {tool_call["id"]}')
                     tools_status[tool_call["id"]] = {
                         "name": tool_call["name"],
                         "status": batch_status.status(f"正在执行 `{tool_call['name']}` ...", expanded=True)
@@ -35,6 +36,7 @@ def get_agent_response(platform, model, api_url, api_key, thinking, max_tokens, 
         
         if event[0] == "tools":
             if event[1]["event"] == "tool-finished":
+                st.write(f'2 {event[1]["tool_call_id"]}')
                 tools_status[event[1]["tool_call_id"]]["status"].write(f"工具输出：{event[1]['output'].content}")
                 tools_status[event[1]["tool_call_id"]]["status"].update(
                     label=f"`{event[1]['output'].name}` 已完成", expanded=False, state="complete")
