@@ -1,6 +1,7 @@
 import streamlit as st
 
-from langchain_core.messages import AIMessageChunk
+from langgraph.types import Command
+from langchain_core.messages import AIMessageChunk, ToolMessage
 from webui_pages.utils import init_model_settings, model_settings_dialog, get_chatllm
 from rag.graphs import RAG_GRAPHS, create_rag_graph
 from kbm.kbs_table import get_kb_names
@@ -21,7 +22,7 @@ def get_rag_response(platform, model, api_url, api_key, thinking, max_tokens, te
     ):
         # st.write(event)
         if event[0] == "updates":
-            if (node_data := event[1].get("call_llm")) and (tool_calls := node_data["messages"][0].tool_calls):
+            if (node_data := event[1].get("model")) and (tool_calls := node_data["messages"][0].tool_calls):
                 tool_name_list_str = " ".join([f"`{tool_call['name']}`" for tool_call in tool_calls])
                 batch_status = main_status.status(f"正在调用 {tool_name_list_str} ...", expanded=True)
                 for tool_call in tool_calls:
@@ -35,9 +36,13 @@ def get_rag_response(platform, model, api_url, api_key, thinking, max_tokens, te
         
         if event[0] == "tools":
             if event[1]["event"] == "tool-finished":
-                tools_status[event[1]["tool_call_id"]]["status"].write(f"工具输出：{event[1]['output'].content}")
+                if type(event[1]["output"]) == ToolMessage:
+                    tool_output = event[1]["output"].content
+                elif type(event[1]["output"]) == Command:
+                    tool_output = event[1]["output"].update["todos"]
+                tools_status[event[1]["tool_call_id"]]["status"].write(f"工具输出：{tool_output}")
                 tools_status[event[1]["tool_call_id"]]["status"].update(
-                    label=f"`{event[1]['output'].name}` 已完成", expanded=False, state="complete")
+                    label=f"`{tools_status[event[1]['tool_call_id']]['name']}` 已完成", expanded=False, state="complete")
             if event[1]["event"] == "tool-error":
                 tools_status[event[1]["tool_call_id"]]["status"].error(f"错误消息：{event[1]['message']}")
                 tools_status[event[1]["tool_call_id"]]["status"].update(
@@ -92,6 +97,10 @@ def rag_page():
     init_chat_history()
     display_chat_history()
 
+    with st.sidebar:
+        selected_rag_graph = st.selectbox("选择工作流", options=RAG_GRAPHS.keys(), key="selected_rag_graph")
+        selected_kb_names = st.multiselect("选择知识库", options=get_kb_names(), key="selected_kb_names")
+    
     with st.bottom:
         cols = st.columns([1, 11, 1], vertical_alignment="center")
         if cols[0].button(":gear:", help="模型配置"):
@@ -99,10 +108,6 @@ def rag_page():
         if cols[2].button(":wastebasket:", help="清空对话"):
             clear_chat_history()
         input = cols[1].chat_input("请输入您的问题")
-    
-    with st.sidebar:
-        selected_rag_graph = st.selectbox("选择工作流", options=RAG_GRAPHS.keys(), key="selected_rag_graph")
-        selected_kb_names = st.multiselect("选择知识库", options=get_kb_names(), key="selected_kb_names")
     
     if input:
         with st.chat_message("user"):

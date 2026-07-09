@@ -8,8 +8,11 @@ langchain-openai
 langchain-milvus
 langchain-chroma
 langchain_community
+langdetect
 sqlalchemy
 rapidocr-onnxruntime
 python-docx
 python-pptx
+markdown
 pymupdf
+

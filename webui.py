@@ -36,5 +36,4 @@ if __name__ == "__main__":
     elif selected_page == "Agent 对 话":
         agent_page()
     elif selected_page == "知 识 库 管 理":
-        # kbm_page()
-        pass
+        kbm_page()
