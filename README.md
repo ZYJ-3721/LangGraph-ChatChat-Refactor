@@ -24,3 +24,4 @@ cp .env.example .env
 ```bash
 streamlit run webui.py
 ```
+
