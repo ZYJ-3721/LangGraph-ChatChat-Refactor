@@ -3,6 +3,7 @@ streamlit_aggrid
 streamlit_antd_components
 xinference-client
 ollama
+langgraph
 langchain
 langchain-openai
 langchain-milvus
@@ -11,8 +12,9 @@ langchain_community
 langdetect
 sqlalchemy
 rapidocr-onnxruntime
+pydantic-settings
+python-dotenv
 python-docx
 python-pptx
 markdown
 pymupdf
-

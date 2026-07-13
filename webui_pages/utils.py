@@ -1,7 +1,8 @@
 import streamlit as st
 from urllib.parse import urlparse
-
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+from config import settings
 
 
 PLATFORMS_API_URL = {
@@ -15,10 +16,10 @@ PLATFORMS = list(PLATFORMS_API_URL.keys())
 
 def init_model_settings():
     if "platform" not in st.session_state:
-        st.session_state["platform"] = PLATFORMS[0]
-        st.session_state["api_url"] = ""
-        st.session_state["api_key"] = ""
-        st.session_state["model"] = next(iter(get_llm_models(st.session_state["platform"])), "")
+        st.session_state["platform"] = settings.platform or PLATFORMS[0]
+        st.session_state["api_url"] = settings.api_url
+        st.session_state["api_key"] = settings.api_key
+        st.session_state["model"] = next(iter(get_llm_models(st.session_state["platform"])), settings.model)
         st.session_state["thinking"] = 0
         st.session_state["max_tokens"] = 65536
         st.session_state["history_len"] = 50
@@ -174,4 +175,5 @@ class ChatOpenAIWithReasoning(ChatOpenAI):
             if reasoning_content is not None:
                 generation_chunk.message.additional_kwargs["reasoning_content"] = reasoning_content
         return generation_chunk
+
 

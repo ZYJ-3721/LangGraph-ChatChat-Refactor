@@ -9,12 +9,12 @@ def create_base_agent_graph(llm: ChatOpenAI, tool_names: list[str]):
     tool_list = [AGETN_TOOLS[name] for name in tool_names]
     tool_node = ToolNode(tools=tool_list)
 
-    def call_llm(state: MessagesState):
+    def llm_node(state: MessagesState):
         llm_with_tools = llm.bind_tools(tools=tool_list)
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
     
     graph = StateGraph(MessagesState)
-    graph.add_node("model", call_llm)
+    graph.add_node("model", llm_node)
     graph.add_node("tools", tool_node)
 
     graph.add_edge(START, "model")

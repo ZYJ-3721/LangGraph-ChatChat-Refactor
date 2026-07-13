@@ -18,5 +18,9 @@ pip install -r requirements.txt
 
 ## 项目启动
 ```bash
+cp .env.example .env
+```
+
+```bash
 streamlit run webui.py
 ```
