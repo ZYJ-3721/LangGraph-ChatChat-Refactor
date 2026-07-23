@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+        "deepwiki": {
+            "transport": "http",
+            "url": "https://mcp.deepwiki.com/mcp"
+        },
+        "docs-langchain": {
+            "transport": "http",
+            "url": "https://docs.langchain.com/mcp"
+        },
+        "reference-langchain": {
+            "transport": "http",
+            "url": "https://reference.langchain.com/mcp"
+        }
+    }
+}
